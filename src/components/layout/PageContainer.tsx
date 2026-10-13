@@ -1,0 +1,2 @@
+import type { ReactNode } from 'react'
+export function PageContainer({ title, description, action, children }: { title?: string; description?: string; action?: ReactNode; children: ReactNode }) { return <main className="page-shell page-enter py-7 sm:py-10">{title && <header className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><h1 className="text-3xl font-bold text-ink sm:text-4xl">{title}</h1>{description && <p className="mt-2 max-w-2xl text-muted">{description}</p>}</div>{action}</header>}{children}</main> }

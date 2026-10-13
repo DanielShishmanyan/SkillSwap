@@ -1,0 +1,147 @@
+import type { Skill, SkillCategory } from "../../types/domain";
+
+const catalog: Record<SkillCategory, string[]> = {
+  Programming: [
+    "React",
+    "JavaScript",
+    "TypeScript",
+    "Python",
+    "Java",
+    "C#",
+    "Node.js",
+    "Next.js",
+    "Vue.js",
+    "Angular",
+    "PHP",
+    "Laravel",
+    "Kotlin",
+    "Swift",
+    "Flutter",
+    "SQL",
+    "PostgreSQL",
+    "Git",
+    "Docker",
+    "Web Accessibility",
+  ],
+  Design: [
+    "Figma",
+    "Photoshop",
+    "UI/UX Design",
+    "Illustrator",
+    "Graphic Design",
+    "Web Design",
+    "Product Design",
+    "Logo Design",
+    "Design Systems",
+    "Prototyping",
+  ],
+  Languages: [
+    "Spanish",
+    "English",
+    "German",
+    "French",
+    "Italian",
+    "Bulgarian",
+    "Japanese",
+    "Korean",
+    "Portuguese",
+    "Mandarin Chinese",
+  ],
+  Music: [
+    "Guitar",
+    "Piano",
+    "Singing",
+    "Music Theory",
+    "Drums",
+    "Violin",
+    "Music Production",
+    "DJing",
+    "Songwriting",
+    "Ukulele",
+  ],
+  Business: [
+    "Entrepreneurship",
+    "Project Management",
+    "Public Speaking",
+    "Leadership",
+    "Finance Basics",
+    "Sales",
+    "Negotiation",
+    "Business Strategy",
+    "Excel",
+    "Career Coaching",
+  ],
+  Marketing: [
+    "Digital Marketing",
+    "SEO",
+    "Social Media Marketing",
+    "Content Strategy",
+    "Email Marketing",
+    "Google Ads",
+    "Brand Strategy",
+    "Analytics",
+    "Market Research",
+    "Community Management",
+  ],
+  Photography: [
+    "Photography",
+    "Portrait Photography",
+    "Product Photography",
+    "Photo Editing",
+    "Lighting",
+    "Street Photography",
+    "Mobile Photography",
+    "Wedding Photography",
+  ],
+  Fitness: [
+    "Personal Fitness",
+    "Yoga",
+    "Pilates",
+    "Running",
+    "Strength Training",
+    "Nutrition Basics",
+    "Mobility",
+    "Meditation",
+  ],
+  Lifestyle: [
+    "Cooking",
+    "Baking",
+    "Gardening",
+    "Time Management",
+    "Personal Finance",
+    "Travel Planning",
+    "Interior Styling",
+  ],
+  Creative: [
+    "Copywriting",
+    "Video Editing",
+    "Creative Writing",
+    "Animation",
+    "3D Modeling",
+    "Drawing",
+    "Painting",
+  ],
+};
+
+const legacyIds: Record<string, string> = {
+  "C#": "csharp",
+  "UI/UX Design": "uiux",
+  "Digital Marketing": "marketing",
+  "Video Editing": "video",
+  "Personal Fitness": "fitness",
+};
+const slug = (name: string) =>
+  legacyIds[name] ??
+  name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+export const skills: Skill[] = Object.entries(catalog).flatMap(
+  ([category, names]) =>
+    names.map((name) => ({
+      id: slug(name),
+      name,
+      category: category as SkillCategory,
+    })),
+);
+export const categories = ["All", ...Object.keys(catalog)];
