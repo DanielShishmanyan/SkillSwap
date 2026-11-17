@@ -1,4 +1,4 @@
-import { browserSessionPersistence, setPersistence, signInWithCustomToken, signOut } from 'firebase/auth'
+import { browserSessionPersistence, GoogleAuthProvider, setPersistence, signInWithCustomToken, signInWithPopup, signOut } from 'firebase/auth'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 import { auth, firebaseApp, isAppCheckConfigured } from '../../firebase/firebase.config'
 
@@ -15,6 +15,13 @@ const call = async <T>(name: string, data: unknown): Promise<T> => {
   return result.data
 }
 export const authService = {
+  async loginWithGoogle() {
+    const firebaseAuth = requireAuth()
+    await setPersistence(firebaseAuth, browserSessionPersistence)
+    const provider = new GoogleAuthProvider()
+    provider.setCustomParameters({ prompt: 'select_account' })
+    await signInWithPopup(firebaseAuth, provider)
+  },
   login(email: string, password: string) { return call<AuthChallenge>('startEmailAuth', { purpose: 'login', email, password }) },
   register(name: string, email: string, password: string) { return call<AuthChallenge>('startEmailAuth', { purpose: 'register', name, email, password }) },
   resend(challengeId: string) { return call<AuthChallenge>('resendEmailAuthCode', { challengeId }) },
