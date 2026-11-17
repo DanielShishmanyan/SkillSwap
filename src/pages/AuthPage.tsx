@@ -69,7 +69,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
     <div className="auth-layout">
       <section className="auth-intro">
         <span className="auth-kicker"><Sparkles size={14}/> GOOD THINGS GROW TOGETHER</span>
-        <h2>Something you know.<br/><span>Something you’ll learn.</span></h2>
+        <h2>Share what you know.<br/><span>Learn something new.</span></h2>
         <p>Share a little of your world. Discover a little of someone else’s. Your next skill starts with a connection.</p>
         <div className="auth-exchange" aria-hidden="true">
           <span className="auth-skill">Design</span>
