@@ -64,7 +64,7 @@ A candidate must teach at least one wanted skill. When they also want a skill th
 
 ## Firebase Setup
 
-For the password + email-code authentication flow, follow [AUTH_SETUP.md](AUTH_SETUP.md). It includes Resend, App Check, server secrets, function deployment, and authentication tests. Both registration and every new sign-in require a server-verified code; configuring only the browser Firebase values is no longer sufficient.
+For Google sign-in and the separate password + email-code flow, follow [AUTH_SETUP.md](AUTH_SETUP.md). Registration and sign-in with a password require a server-verified code. Google sign-in uses a verified Firebase Google session.
 
 1. Create a Firebase project and a web application.
 2. Enable Email/Password Authentication.

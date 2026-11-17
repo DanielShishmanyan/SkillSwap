@@ -11,8 +11,8 @@ const verified = { email_verified: true, email_otp: true, otp_verified_at: now }
 
 before(async () => {
   environment = await initializeTestEnvironment({ projectId: 'demo-skillswap-auth',
-    firestore: { host: '127.0.0.1', port: 8088, rules: await readFile(new URL('../../firestore.rules', import.meta.url), 'utf8') },
-    storage: { host: '127.0.0.1', port: 9199, rules: await readFile(new URL('../../storage.rules', import.meta.url), 'utf8') },
+    firestore: { rules: await readFile(new URL('../../firestore.rules', import.meta.url), 'utf8') },
+    storage: { rules: await readFile(new URL('../../storage.rules', import.meta.url), 'utf8') },
   })
   await environment.withSecurityRulesDisabled(async context => {
     await setDoc(doc(context.firestore(), 'users/alice'), { id: 'alice', name: 'Alice', email: 'alice@example.com', ratingAverage: 0, xp: 0 })
@@ -43,6 +43,27 @@ test('clients cannot read or write challenges or rate limits even after verifica
   }
 })
 
+test('only fresh, verified Google sign-ins can use Firebase resources without a code', async () => {
+  const google = { email_verified: true, auth_time: now, firebase: { sign_in_provider: 'google.com' } }
+  const invalidSessions = [
+    { ...google, email_verified: false },
+    { ...google, auth_time: now - 43201 },
+    { ...google, auth_time: now + 3600 },
+    { ...google, firebase: { sign_in_provider: 'password', identities: { 'google.com': ['linked-account'] } } },
+  ]
+  const readProfile = claims => getDoc(doc(environment.authenticatedContext('alice', claims).firestore(), 'users/alice'))
+  const uploadAvatar = claims => uploadBytes(
+    ref(environment.authenticatedContext('alice', claims).storage(), 'avatars/alice/google.png'),
+    new Uint8Array([137, 80, 78, 71]), { contentType: 'image/png' },
+  )
+  await assertSucceeds(readProfile(google))
+  await assertSucceeds(uploadAvatar(google))
+  for (const claims of invalidSessions) {
+    await assertFails(readProfile(claims))
+    await assertFails(uploadAvatar(claims))
+  }
+})
+
 test('avatar writes require a verified session belonging to the avatar owner', async () => {
   const image = new Uint8Array([137, 80, 78, 71])
   const metadata = { contentType: 'image/png' }
@@ -62,7 +83,7 @@ test('custom-token verification claims survive refresh but do not leak to passwo
   const app = initializeApp({ projectId: 'demo-skillswap-auth', apiKey: 'fake-api-key' }, 'auth-test')
   try {
     const auth = getAuth(app)
-    connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
+    connectAuthEmulator(auth, `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}`, { disableWarnings: true })
     const email = `test-${Date.now()}@example.com`
     const account = await adminAuth(admin).createUser({ email, password: 'safe-test-passphrase', emailVerified: true })
     const token = await adminAuth(admin).createCustomToken(account.uid, { email_otp: true, otp_verified_at: now })

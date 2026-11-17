@@ -8,6 +8,7 @@ interface AuthIdentity { id: string; name: string; email: string }
 interface AuthContextValue {
   user: AuthIdentity | null
   loading: boolean
+  loginWithGoogle: () => Promise<void>
   login: (email: string, password: string) => Promise<AuthChallenge | null>
   register: (name: string, email: string, password: string) => Promise<AuthChallenge>
   verifyCode: (challengeId: string, code: string) => Promise<void>
@@ -39,9 +40,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const token = await firebaseUser.getIdTokenResult()
         if (current !== generation) return
-        const verifiedAt = Number(token.claims.otp_verified_at)
-        const expiresIn = (verifiedAt + 12 * 60 * 60) * 1000 - Date.now()
-        if (token.claims.email_otp !== true || token.claims.email_verified !== true || !Number.isFinite(verifiedAt) || expiresIn <= 0) {
+        const googleSignIn = token.signInProvider === 'google.com'
+        const verifiedAt = googleSignIn ? token.claims.auth_time : token.claims.otp_verified_at
+        const hasVerifiedSession = googleSignIn || token.claims.email_otp === true
+        const now = Date.now()
+        const expiresIn = typeof verifiedAt === 'number' && Number.isInteger(verifiedAt) && verifiedAt * 1000 <= now
+          ? (verifiedAt + 12 * 60 * 60) * 1000 - now
+          : 0
+        if (!hasVerifiedSession || token.claims.email_verified !== true || expiresIn <= 0) {
           setUser(null); setLoading(false)
           await signOut(firebaseAuth).catch(() => undefined)
           return
@@ -75,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem(DEMO_SESSION_KEY)
     setUser(null)
   }
-  return <AuthContext.Provider value={{ user, loading, login, register, verifyCode, resendCode: authService.resend, logout }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, loading, login, loginWithGoogle: authService.loginWithGoogle, register, verifyCode, resendCode: authService.resend, logout }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

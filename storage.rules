@@ -1,13 +1,18 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    function freshSession(verifiedAt) {
+      return verifiedAt is int
+        && verifiedAt * 1000 <= request.time.toMillis()
+        && request.time.toMillis() < (verifiedAt + 43200) * 1000;
+    }
     function verifiedSession() {
       return request.auth != null
         && request.auth.token.email_verified == true
-        && request.auth.token.email_otp == true
-        && request.auth.token.otp_verified_at is int
-        && request.auth.token.otp_verified_at * 1000 <= request.time.toMillis()
-        && request.time.toMillis() < (request.auth.token.otp_verified_at + 43200) * 1000;
+        && ((request.auth.token.firebase.sign_in_provider == 'google.com'
+             && freshSession(request.auth.token.auth_time))
+            || ('email_otp' in request.auth.token && request.auth.token.email_otp == true
+                && freshSession(request.auth.token.otp_verified_at)));
     }
     match /avatars/{userId}/{fileName} {
       allow read: if true;
