@@ -63,7 +63,9 @@ export function AuthPage({ register = false }: { register?: boolean }) {
     setGoogleError('')
     setGoogleLoading(true)
     try {
-      await loginWithGoogle()
+      const next = await loginWithGoogle()
+      setChallengeEmail(next.email)
+      setChallenge(next)
     } catch (error) {
       setGoogleError(authErrorMessage(error))
     } finally {
@@ -102,7 +104,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
         <p className="auth-card-eyebrow">{register ? 'Make yourself at home' : 'Welcome back'}</p>
         <h1 id="auth-title" className="mt-2 text-3xl font-bold tracking-tight text-ink">{register ? 'Create your account' : 'Your next chapter awaits.'}</h1>
         <p className="mt-3 text-sm leading-6 text-muted">{register ? 'A place to share what you know and discover something new.' : 'Sign in to pick up where you left off.'}</p>
-        {isFirebaseConfigured && <Button className="mt-6 w-full" type="button" variant="secondary" loading={googleLoading} disabled={loading || isSubmitting || googleLoading} onClick={continueWithGoogle}>Continue with Google</Button>}
+        {isFirebaseConfigured && <><Button className="mt-6 w-full" type="button" variant="secondary" loading={googleLoading} disabled={loading || isSubmitting || googleLoading} onClick={continueWithGoogle}>Continue with Google</Button><p className="mt-3 text-center text-xs leading-5 text-muted">We’ll email you a code after Google sign-in.</p></>}
         {googleError && <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700" role="alert">{googleError}</div>}
         <form className="mt-8" onSubmit={handleSubmit(submit)} noValidate>
           {register && <Field label="Full name" error={errors.name?.message}><input className="field" autoComplete="name" placeholder="Your full name" {...field('name')} /></Field>}

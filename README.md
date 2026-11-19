@@ -64,7 +64,7 @@ A candidate must teach at least one wanted skill. When they also want a skill th
 
 ## Firebase Setup
 
-For Google sign-in and the password + email-code flow on Vercel with Firebase Spark, follow [AUTH_SETUP.md](AUTH_SETUP.md). Registration and sign-in with a password require a server-verified code sent through Resend. Google sign-in uses a verified Firebase Google session.
+For Google sign-in and the password + email-code flow on Vercel with Firebase Spark, follow [AUTH_SETUP.md](AUTH_SETUP.md). Both password and Google sign-in require a server-verified code sent through Resend before an application session is issued.
 
 1. Create a Firebase project and a web application.
 2. Enable Email/Password Authentication.

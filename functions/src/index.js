@@ -28,5 +28,6 @@ function callable(action) {
 }
 
 export const startEmailAuth = callable('startEmailAuth')
+export const startGoogleEmailAuth = callable('startGoogleEmailAuth')
 export const resendEmailAuthCode = callable('resendEmailAuthCode')
 export const verifyEmailAuthCode = callable('verifyEmailAuthCode')

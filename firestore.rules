@@ -9,10 +9,10 @@ service cloud.firestore {
     function signedIn() {
       return request.auth != null
         && request.auth.token.email_verified == true
-        && ((request.auth.token.firebase.sign_in_provider == 'google.com'
-             && freshSession(request.auth.token.auth_time))
-            || ('email_otp' in request.auth.token && request.auth.token.email_otp == true
-                && freshSession(request.auth.token.otp_verified_at)));
+        && request.auth.token.firebase.sign_in_provider == 'custom'
+        && 'email_otp' in request.auth.token
+        && request.auth.token.email_otp == true
+        && freshSession(request.auth.token.otp_verified_at);
     }
     function isSelf(id) { return signedIn() && request.auth.uid == id; }
     function participant(data) { return signedIn() && request.auth.uid in data.participantIds; }

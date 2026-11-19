@@ -2,7 +2,7 @@
 
 ## Vercel backend (Firebase Spark)
 
-The frontend uses same-origin Vercel endpoints under `/api/auth/` for password login, registration, resending, and code verification. Google sign-in continues to use Firebase directly.
+The frontend uses same-origin Vercel endpoints under `/api/auth/` for password login, registration, Google email challenges, resending, and code verification. Google sign-in runs in an isolated, memory-only Firebase app. The backend verifies that Google ID token and emails the code to the verified account address. Only code verification issues the main app session.
 
 Set these Vercel Production environment variables and redeploy:
 
@@ -29,7 +29,7 @@ The `functions/` entry point below remains available as an alternative Firebase 
 3. Добавете настройките на Firebase Web приложението (`VITE_FIREBASE_*` от `.env.example`) във Vercel → Settings → Environment Variables → Production и направете Redeploy. Ключът за App Check е необходим за входа с имейл код.
 4. Публикувайте обновените правила с `firebase deploy --project skillswap-ba92b --only firestore:rules,storage`, ако услугите са активирани в проекта.
 
-Google сесията изисква потвърден имейл и изтича след 12 часа. Входът с парола продължава да изисква код от Resend.
+След входа с Google се изпраща код чрез Resend. Достъпът до приложението изисква проверен код както за Google, така и за вход с парола. Сесията изтича след 12 часа.
 
 ## Как работи входът с имейл код
 
@@ -40,7 +40,7 @@ Google сесията изисква потвърден имейл и изтич
 
 Кодът важи 10 минути от първата заявка. Има максимум 5 грешни опита, 60 секунди между изпращанията и максимум 3 повторни изпращания. Повторното изпращане сменя кода, без да нулира грешките или срока. Има допълнителни транзакционни лимити по IP, имейл и акаунт. Нов вход анулира предишния код за акаунта. Всяка callable функция изисква Firebase App Check.
 
-Сесиите се пазят чрез `browserSessionPersistence`, не като собствен JSON в localStorage. Код се изисква при всеки нов вход с парола; презареждането на вече отворен таб запазва сесията. След 12 часа се изисква нов вход. Не задавайте `email_otp` като постоянен user custom claim чрез `setCustomUserClaims` — той трябва да принадлежи само на сесия, издадена след проверка на код.
+Сесиите се пазят чрез `browserSessionPersistence`, не като собствен JSON в localStorage. Код се изисква при всеки нов вход с Google или парола; презареждането на вече отворен таб запазва сесията. След 12 часа се изисква нов вход. Не задавайте `email_otp` като постоянен user custom claim чрез `setCustomUserClaims` — той трябва да принадлежи само на сесия, издадена след проверка на код.
 
 ## 1. Firebase
 

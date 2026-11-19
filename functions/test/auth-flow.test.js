@@ -29,6 +29,46 @@ const { getApps, deleteApp } = await import('firebase-admin/app')
 const request = data => ({ data, rawRequest: { ip: '127.0.0.2', socket: { remoteAddress: '127.0.0.2' } } })
 const latestCode = () => emails.at(-1).text.match(/code is: (\d{6})/)[1]
 
+test('Google credentials request a code for the verified account and only the code issues an app session', async () => {
+  const { initializeApp, deleteApp } = await import('firebase/app')
+  const { getAuth: clientAuth, connectAuthEmulator, GoogleAuthProvider, signInWithCredential } = await import('firebase/auth')
+  const app = initializeApp({ apiKey: 'emulator-only', projectId: 'demo-skillswap-auth' }, 'google-code-test')
+  try {
+    const auth = clientAuth(app)
+    connectAuthEmulator(auth, `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}`, { disableWarnings: true })
+    const email = `google-${Date.now()}@example.com`
+    const now = Math.floor(Date.now() / 1000)
+    const payload = { sub: `google-user-${Date.now()}`, email, email_verified: true,
+      name: 'Google Member', iss: 'https://accounts.google.com', aud: 'emulator-only', iat: now, exp: now + 3600 }
+    const googleToken = `${Buffer.from(JSON.stringify({ alg: 'none' })).toString('base64url')}.${Buffer.from(JSON.stringify(payload)).toString('base64url')}.`
+    const result = await signInWithCredential(auth, GoogleAuthProvider.credential(googleToken))
+    const idToken = await result.user.getIdToken()
+    assert.equal((await result.user.getIdTokenResult()).claims.email_otp, undefined)
+    const handlers = createAuthHandlers({
+      db: getFirestore(), adminAuth: getAuth(), otpSecret: process.env.OTP_HMAC_KEY,
+      resendKey: process.env.RESEND_API_KEY, firebaseWebKey: process.env.FIREBASE_WEB_API_KEY,
+      emailFrom: process.env.AUTH_EMAIL_FROM,
+    })
+    await assert.rejects(handlers.startGoogleEmailAuth(request({ idToken: 'invalid-token' })))
+    const challenge = await handlers.startGoogleEmailAuth(request({ idToken, email: 'other-person@example.com' }))
+    assert.equal(challenge.email, email)
+    assert.equal(challenge.customToken, undefined)
+    assert.deepEqual(emails.at(-1).to, [email])
+    await assert.rejects(handlers.verifyEmailAuthCode(request({ challengeId: challenge.challengeId, code: latestCode() === '999999' ? '999998' : '999999' })))
+    const verified = await handlers.verifyEmailAuthCode(request({ challengeId: challenge.challengeId, code: latestCode() }))
+    assert.ok(verified.customToken)
+    await assert.rejects(handlers.verifyEmailAuthCode(request({ challengeId: challenge.challengeId, code: latestCode() })))
+    const { signInWithCustomToken } = await import('firebase/auth')
+    const session = await signInWithCustomToken(auth, verified.customToken)
+    const claims = await session.user.getIdTokenResult()
+    assert.equal(claims.signInProvider, 'custom')
+    assert.equal(claims.claims.email_otp, true)
+    const deliveryCount = emails.length
+    await assert.rejects(handlers.startGoogleEmailAuth(request({ idToken: await session.user.getIdToken() })))
+    assert.equal(emails.length, deliveryCount)
+  } finally { await deleteApp(app) }
+})
+
 test('Vercel HTTP routes send and verify codes using the shared Firebase backend', async () => {
   const api = createAuthHttpHandler(() => ({ handlers: createAuthHandlers({
     db: getFirestore(), adminAuth: getAuth(), otpSecret: process.env.OTP_HMAC_KEY,

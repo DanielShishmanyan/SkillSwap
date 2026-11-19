@@ -90,6 +90,37 @@ export function createAuthHandlers({ db, adminAuth, otpSecret, resendKey, fireba
     } else account = await passwordLogin(input.email, input.password)
     if (account.disabled) throw new AuthError('unauthenticated', 'Unable to sign in.')
 
+    return sendChallenge(account, input.purpose)
+  }
+
+  const startGoogleEmailAuth = async request => {
+    await rateLimit(request, 'google-start')
+    const token = request.data?.idToken
+    if (typeof token !== 'string' || token.length > 8192 || !token) {
+      throw new AuthError('unauthenticated', 'Sign in with Google again to request a code.')
+    }
+    let identity
+    try {
+      identity = await adminAuth.verifyIdToken(token, true)
+    } catch {
+      throw new AuthError('unauthenticated', 'Sign in with Google again to request a code.')
+    }
+    const now = Math.floor(Date.now() / 1000)
+    if (identity.firebase?.sign_in_provider !== 'google.com' || identity.email_verified !== true
+        || typeof identity.auth_time !== 'number' || identity.auth_time > now
+        || identity.auth_time < now - 600) {
+      throw new AuthError('unauthenticated', 'Sign in with Google again to request a code.')
+    }
+    const account = await adminAuth.getUser(identity.uid)
+    if (account.disabled || !account.emailVerified || !account.email || account.email !== identity.email) {
+      throw new AuthError('unauthenticated', 'Unable to verify this Google account.')
+    }
+    await rateLimit(request, 'start', [[`email:start:${account.email.toLowerCase()}`, 6]])
+    const challenge = await sendChallenge(account, 'login')
+    return { ...challenge, email: account.email }
+  }
+
+  async function sendChallenge(account, purpose) {
     const id = createChallengeId()
     const { code, codeHash } = createCode(otpSecret, id)
     const now = Date.now()
@@ -108,7 +139,7 @@ export function createAuthHandlers({ db, adminAuth, otpSecret, resendKey, fireba
     catch (error) {
       if (error instanceof AuthError && error.code === 'resource-exhausted') throw error
       const deliveryMessage = error instanceof AuthError ? error.message : 'The email could not be sent.'
-      throw new AuthError('failed-precondition', input.purpose === 'register'
+      throw new AuthError('failed-precondition', purpose === 'register'
         ? `Your account was created. ${deliveryMessage} Wait one minute, then sign in to request a new code.`
         : `${deliveryMessage} Wait one minute and try signing in again.`)
     }
@@ -166,5 +197,5 @@ export function createAuthHandlers({ db, adminAuth, otpSecret, resendKey, fireba
     return { customToken }
   }
 
-  return { startEmailAuth, resendEmailAuthCode, verifyEmailAuthCode }
+  return { startEmailAuth, startGoogleEmailAuth, resendEmailAuthCode, verifyEmailAuthCode }
 }

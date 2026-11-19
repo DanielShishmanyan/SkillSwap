@@ -8,7 +8,7 @@ interface AuthIdentity { id: string; name: string; email: string }
 interface AuthContextValue {
   user: AuthIdentity | null
   loading: boolean
-  loginWithGoogle: () => Promise<void>
+  loginWithGoogle: () => Promise<AuthChallenge & { email: string }>
   login: (email: string, password: string) => Promise<AuthChallenge | null>
   register: (name: string, email: string, password: string) => Promise<AuthChallenge>
   verifyCode: (challengeId: string, code: string) => Promise<void>
@@ -40,9 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const token = await firebaseUser.getIdTokenResult()
         if (current !== generation) return
-        const googleSignIn = token.signInProvider === 'google.com'
-        const verifiedAt = googleSignIn ? token.claims.auth_time : token.claims.otp_verified_at
-        const hasVerifiedSession = googleSignIn || token.claims.email_otp === true
+        const verifiedAt = token.claims.otp_verified_at
+        const hasVerifiedSession = token.signInProvider === 'custom' && token.claims.email_otp === true
         const now = Date.now()
         const expiresIn = typeof verifiedAt === 'number' && Number.isInteger(verifiedAt) && verifiedAt * 1000 <= now
           ? (verifiedAt + 12 * 60 * 60) * 1000 - now

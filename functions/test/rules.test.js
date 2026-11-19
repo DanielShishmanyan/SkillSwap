@@ -7,7 +7,7 @@ import { ref, uploadBytes } from 'firebase/storage'
 
 let environment
 const now = Math.floor(Date.now() / 1000)
-const verified = { email_verified: true, email_otp: true, otp_verified_at: now }
+const verified = { email_verified: true, email_otp: true, otp_verified_at: now, firebase: { sign_in_provider: 'custom' } }
 
 before(async () => {
   environment = await initializeTestEnvironment({ projectId: 'demo-skillswap-auth',
@@ -43,7 +43,7 @@ test('clients cannot read or write challenges or rate limits even after verifica
   }
 })
 
-test('only fresh, verified Google sign-ins can use Firebase resources without a code', async () => {
+test('Google sign-ins cannot access Firebase resources until a code-verified session is issued', async () => {
   const google = { email_verified: true, auth_time: now, firebase: { sign_in_provider: 'google.com' } }
   const invalidSessions = [
     { ...google, email_verified: false },
@@ -56,8 +56,10 @@ test('only fresh, verified Google sign-ins can use Firebase resources without a 
     ref(environment.authenticatedContext('alice', claims).storage(), 'avatars/alice/google.png'),
     new Uint8Array([137, 80, 78, 71]), { contentType: 'image/png' },
   )
-  await assertSucceeds(readProfile(google))
-  await assertSucceeds(uploadAvatar(google))
+  await assertFails(readProfile(google))
+  await assertFails(uploadAvatar(google))
+  await assertSucceeds(readProfile(verified))
+  await assertSucceeds(uploadAvatar(verified))
   for (const claims of invalidSessions) {
     await assertFails(readProfile(claims))
     await assertFails(uploadAvatar(claims))

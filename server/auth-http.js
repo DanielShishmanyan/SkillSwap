@@ -1,6 +1,6 @@
 import { AuthError } from '../functions/src/auth-handlers.js'
 
-const actions = new Set(['startEmailAuth', 'resendEmailAuthCode', 'verifyEmailAuthCode'])
+const actions = new Set(['startEmailAuth', 'startGoogleEmailAuth', 'resendEmailAuthCode', 'verifyEmailAuthCode'])
 const statusCodes = {
   'invalid-argument': 400, unauthenticated: 401, 'permission-denied': 403,
   'failed-precondition': 409, 'resource-exhausted': 429, unavailable: 503,

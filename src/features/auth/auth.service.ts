@@ -1,4 +1,5 @@
-import { browserSessionPersistence, GoogleAuthProvider, setPersistence, signInWithCustomToken, signInWithPopup, signOut } from 'firebase/auth'
+import { getApps, initializeApp } from 'firebase/app'
+import { browserSessionPersistence, getAuth, GoogleAuthProvider, inMemoryPersistence, setPersistence, signInWithCustomToken, signInWithPopup, signOut } from 'firebase/auth'
 import { auth, firebaseApp } from '../../firebase/firebase.config'
 
 export interface AuthChallenge { challengeId: string; expiresAt: number; resendAfter: number }
@@ -24,11 +25,21 @@ const call = async <T>(name: string, data: unknown): Promise<T> => {
 }
 export const authService = {
   async loginWithGoogle() {
-    const firebaseAuth = requireAuth()
-    await setPersistence(firebaseAuth, browserSessionPersistence)
+    requireAuth()
+    // Keep the Google-only credential out of the app's authenticated session.
+    const temporaryApp = getApps().find(app => app.name === 'google-verification')
+      || initializeApp(firebaseApp!.options, 'google-verification')
+    const temporaryAuth = getAuth(temporaryApp)
+    await setPersistence(temporaryAuth, inMemoryPersistence)
     const provider = new GoogleAuthProvider()
     provider.setCustomParameters({ prompt: 'select_account' })
-    await signInWithPopup(firebaseAuth, provider)
+    try {
+      const result = await signInWithPopup(temporaryAuth, provider)
+      const idToken = await result.user.getIdToken()
+      return await call<AuthChallenge & { email: string }>('startGoogleEmailAuth', { idToken })
+    } finally {
+      await signOut(temporaryAuth)
+    }
   },
   login(email: string, password: string) { return call<AuthChallenge>('startEmailAuth', { purpose: 'login', email, password }) },
   register(name: string, email: string, password: string) { return call<AuthChallenge>('startEmailAuth', { purpose: 'register', name, email, password }) },
