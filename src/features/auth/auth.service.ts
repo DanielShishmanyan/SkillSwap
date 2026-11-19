@@ -1,6 +1,5 @@
 import { browserSessionPersistence, GoogleAuthProvider, setPersistence, signInWithCustomToken, signInWithPopup, signOut } from 'firebase/auth'
-import { getFunctions, httpsCallable } from 'firebase/functions'
-import { auth, firebaseApp, isAppCheckConfigured } from '../../firebase/firebase.config'
+import { auth, firebaseApp } from '../../firebase/firebase.config'
 
 export interface AuthChallenge { challengeId: string; expiresAt: number; resendAfter: number }
 const requireAuth = () => {
@@ -9,10 +8,19 @@ const requireAuth = () => {
 }
 const call = async <T>(name: string, data: unknown): Promise<T> => {
   requireAuth()
-  if (!isAppCheckConfigured) throw new Error('Email sign-in setup is incomplete. Please try again after setup is complete.')
-  const functions = getFunctions(firebaseApp!, 'europe-west1')
-  const result = await httpsCallable<unknown, T>(functions, name)(data)
-  return result.data
+  const response = await fetch(`/api/auth/${name}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify(data),
+  })
+  const result = await response.json().catch(() => null)
+  if (!response.ok || !result || !('data' in result)) {
+    const error = new Error(result?.error?.message || 'Email sign-in is temporarily unavailable.')
+    Object.assign(error, { code: result?.error?.code || 'functions/unavailable' })
+    throw error
+  }
+  return result.data as T
 }
 export const authService = {
   async loginWithGoogle() {

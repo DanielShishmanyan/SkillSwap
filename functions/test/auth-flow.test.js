@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
 import { after, test } from 'node:test'
+import { createAuthHttpHandler } from '../../server/auth-http.js'
+import { createAuthHandlers } from '../src/auth-handlers.js'
 
 // Emulator-only fixtures. Outbound delivery is intercepted; no real email is sent.
 if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.FIREBASE_AUTH_EMULATOR_HOST) throw new Error('Run this test through Firebase emulators:exec.')
@@ -26,6 +28,35 @@ const { getAuth } = await import('firebase-admin/auth')
 const { getApps, deleteApp } = await import('firebase-admin/app')
 const request = data => ({ data, rawRequest: { ip: '127.0.0.2', socket: { remoteAddress: '127.0.0.2' } } })
 const latestCode = () => emails.at(-1).text.match(/code is: (\d{6})/)[1]
+
+test('Vercel HTTP routes send and verify codes using the shared Firebase backend', async () => {
+  const api = createAuthHttpHandler(() => ({ handlers: createAuthHandlers({
+    db: getFirestore(), adminAuth: getAuth(), otpSecret: process.env.OTP_HMAC_KEY,
+    resendKey: process.env.RESEND_API_KEY, firebaseWebKey: process.env.FIREBASE_WEB_API_KEY,
+    emailFrom: process.env.AUTH_EMAIL_FROM,
+  }) }))
+  async function post(action, body) {
+    const response = {
+      setHeader() {},
+      status(code) { this.statusCode = code; return this },
+      json(data) { this.body = data; return this },
+    }
+    await api({
+      method: 'POST', query: { action }, body, socket: { remoteAddress: '127.0.0.3' },
+      headers: { host: 'skillswap.example', origin: 'https://skillswap.example', 'content-type': 'application/json' },
+    }, response)
+    return response
+  }
+  const email = `vercel-${Date.now()}@example.com`
+  const start = await post('startEmailAuth', { purpose: 'register', email, name: 'Vercel Member', password: 'safe-test-passphrase' })
+  assert.equal(start.statusCode, 200)
+  assert.equal(start.body.data.customToken, undefined)
+  const verified = await post('verifyEmailAuthCode', { challengeId: start.body.data.challengeId, code: latestCode() })
+  assert.equal(verified.statusCode, 200)
+  assert.ok(verified.body.data.customToken)
+  const replay = await post('verifyEmailAuthCode', { challengeId: start.body.data.challengeId, code: latestCode() })
+  assert.equal(replay.statusCode, 400)
+})
 
 after(async () => { globalThis.fetch = originalFetch; await Promise.all(getApps().map(deleteApp)) })
 

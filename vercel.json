@@ -1,5 +1,12 @@
 {
+  "functions": {
+    "api/auth/[action].js": { "maxDuration": 60 }
+  },
   "rewrites": [
+    {
+      "source": "/api/auth/:action",
+      "destination": "/api/auth/:action"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"

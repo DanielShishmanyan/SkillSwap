@@ -1,5 +1,25 @@
 # Настройка на защитения вход
 
+## Vercel backend (Firebase Spark)
+
+The frontend uses same-origin Vercel endpoints under `/api/auth/` for password login, registration, resending, and code verification. Google sign-in continues to use Firebase directly.
+
+Set these Vercel Production environment variables and redeploy:
+
+- The six populated Firebase web settings from `.env.example`.
+- `RESEND_API_KEY` as a Secret.
+- `AUTH_EMAIL_FROM`, for example `SkillSwap <onboarding@resend.dev>` for owner-only testing, or an address at your verified Resend domain.
+- `FIREBASE_SERVICE_ACCOUNT_JSON` as a Secret containing the complete Firebase Admin service-account JSON for the same project.
+- Optional `OTP_HMAC_KEY` as a Secret with at least 32 random characters. If omitted, the backend derives a purpose-specific HMAC key from the private service-account key. Rotating that private key invalidates outstanding codes.
+
+Enable Email/Password in Firebase Authentication and create the default Firestore database. Publish `firestore.rules` before storing challenges, so clients cannot access them. Keep service-account JSON files out of Git and browser variables.
+
+Vercel routes enforce same-origin JSON requests and transactional IP, email, account, and code-attempt limits. App Check is not required by these Vercel routes. There is a shared limit of 100 attempted email sends per rolling 24 hours, including failed deliveries. No Cloud Functions deployment or Blaze upgrade is needed for these routes. Firebase and Resend free-tier quotas still apply.
+
+Check `/api/auth/health` after deployment. HTTP 200 with `ready: true` confirms server configuration and Firestore access. It does not send mail. Actual delivery must be tested through registration/sign-in. Resend's test sender only delivers to the Resend account owner's address.
+
+The `functions/` entry point below remains available as an alternative Firebase Cloud Functions deployment.
+
 Входът с Google използва Firebase Authentication. Входът с парола и код използва Firebase Authentication, Cloud Functions и Resend. Изпращането на имейли изисква настройка и deployment на Cloud Functions.
 
 ## Вход с Google

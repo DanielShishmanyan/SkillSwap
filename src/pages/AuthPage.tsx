@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { Button } from '../components/ui/Button'
 import { EmailCodeForm } from '../components/auth/EmailCodeForm'
 import { useAuth } from '../features/auth/AuthProvider'
-import { isAppCheckConfigured, isDemoAuthEnabled, isFirebaseConfigured } from '../firebase/firebase.config'
+import { isDemoAuthEnabled, isFirebaseConfigured } from '../firebase/firebase.config'
 import { authErrorMessage } from '../features/auth/auth-errors'
 import type { AuthChallenge } from '../features/auth/auth.service'
 
@@ -36,7 +36,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [challenge, setChallenge] = useState<AuthChallenge | null>(null)
   const [challengeEmail, setChallengeEmail] = useState('')
-  const canSubmitEmail = isAppCheckConfigured || (isDemoAuthEnabled && !register)
+  const canSubmitEmail = isFirebaseConfigured || (isDemoAuthEnabled && !register)
   const schema = register ? registrationSchema : loginSchema
   const { register: field, handleSubmit, resetField, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver: zodResolver(schema), mode: 'onChange', reValidateMode: 'onChange', defaultValues: { name: '', email: '', password: '', confirmPassword: '' } })
   const from = (location.state as { from?: unknown } | null)?.from
@@ -111,7 +111,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
           {register && <Field label="Confirm password" error={errors.confirmPassword?.message} className="mt-5"><input className="field" type={showPassword ? 'text' : 'password'} autoComplete="new-password" placeholder="Repeat your password" {...field('confirmPassword', { deps: ['password'] })} /></Field>}
           {serverError && <div className="mt-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700" role="alert">{serverError}</div>}
           <Button className="auth-submit mt-6 w-full" type="submit" loading={isSubmitting} disabled={loading || isSubmitting || googleLoading || !canSubmitEmail}>{isDemoAuthEnabled ? 'Sign in to demo' : 'Continue with email code'}<ArrowRight size={17}/></Button>
-          {isAppCheckConfigured && <p className="mt-3 text-center text-xs leading-5 text-muted">We’ll email you a code to complete {register ? 'registration' : 'sign-in'}.</p>}
+          {isFirebaseConfigured && <p className="mt-3 text-center text-xs leading-5 text-muted">We’ll email you a code to complete {register ? 'registration' : 'sign-in'}.</p>}
           {!canSubmitEmail && <p role="status" className="mt-4 text-sm leading-6 text-muted">Email sign-in is not available yet. Please try again after setup is complete.</p>}
         </form>
         {isDemoAuthEnabled && !register && <div className="auth-demo mt-5 rounded-xl p-4 text-sm"><p className="font-bold text-brand-700">Local demo · no email verification</p><p className="mt-1 text-muted"><span className="font-semibold">mila@skillswap.dev</span> · password: <span className="font-semibold">skillswap</span></p></div>}
