@@ -6,13 +6,15 @@ import { useAppStore } from '../app/app-store.context'
 import { Avatar } from '../components/ui/Avatar'
 import { getCalendarEvents, getUnscheduledSwaps, type CalendarEvent } from '../features/calendar/calendar-events'
 import type { UserProfile } from '../types/domain'
+import { useBookings } from '../features/calendar/bookings.service'
 import './CalendarPage.css'
 
 const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 export function CalendarPage() {
   const { lessons, swaps, currentUser, users } = useAppStore()
-  const events = useMemo(() => getCalendarEvents(lessons, swaps, currentUser.id), [lessons, swaps, currentUser.id])
+  const bookings = useBookings()
+  const events = useMemo(() => getCalendarEvents(lessons, swaps, currentUser.id, bookings.data), [lessons, swaps, currentUser.id, bookings.data])
   const unscheduled = useMemo(() => getUnscheduledSwaps(swaps, currentUser.id), [swaps, currentUser.id])
   const firstUpcoming = events.find(event => event.status !== 'completed' && event.startsAt >= new Date())
   const [month, setMonth] = useState(() => startOfMonth(firstUpcoming?.startsAt ?? new Date()))
@@ -38,8 +40,10 @@ export function CalendarPage() {
       <div className="page-shell calendar-content">
         <header className="calendar-heading">
           <div><p className="calendar-eyebrow">MAKE A LITTLE TIME TO GROW</p><h1>A moment to share. <em>A moment to learn.</em></h1><p>Your swaps and lessons, together in one little plan.</p></div>
-          <button type="button" className="calendar-today-button" onClick={today}>Back to today<CalendarDays size={16} /></button>
+          <div className="flex flex-wrap items-center gap-3"><Link to="/session/new" className="session-join"><Video size={16} />Schedule a lesson</Link><button type="button" className="calendar-today-button" onClick={today}>Back to today<CalendarDays size={16} /></button></div>
         </header>
+        {bookings.error && <p role="alert" className="session-error">Your shared lessons could not be loaded. <button type="button" onClick={() => void bookings.refetch()} className="underline">Try again</button></p>}
+        {Boolean(bookings.data?.some(booking => booking.status === 'pending')) && <section className="calendar-unscheduled mb-5"><div><h2>Lesson proposals</h2><p>Confirm a time together to create your Google Meet room.</p></div><div className="calendar-unscheduled-list">{bookings.data?.filter(booking => booking.status === 'pending').map(booking => <Link key={booking.id} to={'/session/' + booking.id}><span className="calendar-unscheduled-icon"><CalendarDays size={18} /></span><span><strong>{booking.title}</strong><small>{new Date(booking.startsAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</small></span><span className="calendar-schedule-label">View proposal<ArrowRight size={15} /></span></Link>)}</div></section>}
 
         <div className="calendar-layout">
           <section className="calendar-month" aria-label="Monthly swaps and lessons calendar">
@@ -85,13 +89,13 @@ export function CalendarPage() {
 }
 
 function AgendaItem({ event, partner }: { event: CalendarEvent; partner?: UserProfile }) {
-  const Icon = event.kind === 'swap' ? ArrowRightLeft : BookOpen
-  return <article className={`calendar-agenda-item calendar-agenda-${event.kind}`}>
+  const Icon = event.kind === 'swap' ? ArrowRightLeft : event.kind === 'booking' ? Video : BookOpen
+  return <article className={`calendar-agenda-item calendar-agenda-${event.kind === 'booking' ? 'lesson' : event.kind}`}>
     <div className="calendar-agenda-type"><span><Icon size={13} />{event.kind === 'swap' ? 'Skill swap' : 'Lesson'}</span><span>{event.status}</span></div>
     <h3>{event.skillName}</h3>
     <p className="calendar-agenda-time"><Clock size={14} />{format(event.startsAt, 'HH:mm')} · {event.duration} min</p>
-    <div className="calendar-agenda-partner">{partner && <Avatar src={partner.avatar} name={partner.name} size="sm" />}<p>{event.teaching ? 'Teaching' : 'Learning'} with<strong>{partner?.name ?? 'SkillSwap member'}</strong></p></div>
+    <div className="calendar-agenda-partner">{partner && <Avatar src={partner.avatar} name={partner.name} size="sm" />}<p>{event.kind === 'booking' ? 'A lesson' : event.teaching ? 'Teaching' : 'Learning'} with<strong>{partner?.name ?? event.partnerName ?? 'SkillSwap member'}</strong></p></div>
     <p className="calendar-agenda-location">{event.deliveryMode === 'online' ? <Video size={14} /> : <MapPin size={14} />}{event.kind === 'swap' && event.location ? event.location : event.deliveryMode === 'online' ? 'Online' : event.deliveryMode === 'in_person' ? 'In person' : 'Online or in person'}</p>
-    <div className="calendar-agenda-footer">{event.kind === 'swap' ? <><span>Free exchange</span><Link to={`/swaps/${event.swapId}`}>Open swap<ArrowRight size={14} /></Link></> : <><span>{event.teaching ? 'You’re teaching' : 'You’re learning'}</span><strong>€{event.price.toFixed(2)}</strong></>}</div>
+    <div className="calendar-agenda-footer">{event.kind === 'booking' ? <><span>Google Meet</span><Link to={'/session/' + event.bookingId}>Open session<ArrowRight size={14} /></Link></> : event.kind === 'swap' ? <><span>Free exchange</span><Link to={`/swaps/${event.swapId}`}>Open swap<ArrowRight size={14} /></Link></> : <><span>{event.teaching ? 'You’re teaching' : 'You’re learning'}</span><strong>€{event.price.toFixed(2)}</strong></>}</div>
   </article>
 }

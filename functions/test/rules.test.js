@@ -17,6 +17,7 @@ before(async () => {
   await environment.withSecurityRulesDisabled(async context => {
     await setDoc(doc(context.firestore(), 'users/alice'), { id: 'alice', name: 'Alice', email: 'alice@example.com', ratingAverage: 0, xp: 0 })
     await setDoc(doc(context.firestore(), 'authChallenges/secret'), { codeHash: 'private' })
+    await setDoc(doc(context.firestore(), 'sessionBookings/shared'), { participantIds: ['alice', 'bob'] })
   })
 })
 after(async () => { await environment?.cleanup() })
@@ -37,10 +38,19 @@ test('fresh code-verified sessions can read profiles, expired and future session
 
 test('clients cannot read or write challenges or rate limits even after verification', async () => {
   const db = environment.authenticatedContext('alice', verified).firestore()
-  for (const collection of ['authChallenges', 'authRateLimits', 'authChallengeOwners']) {
+  for (const collection of ['authChallenges', 'authRateLimits', 'authChallengeOwners', 'calendarConnections', 'calendarOAuthStates', 'sessionJobs', 'sessionEmails', 'sessionLimits']) {
     await assertFails(getDoc(doc(db, collection, 'secret')))
     await assertFails(setDoc(doc(db, collection, 'secret'), { consumed: false }))
   }
+})
+
+test('only verified participants can read a booking and all client writes are denied', async () => {
+  for (const uid of ['alice', 'bob']) {
+    const db = environment.authenticatedContext(uid, verified).firestore()
+    await assertSucceeds(getDoc(doc(db, 'sessionBookings/shared')))
+    await assertFails(setDoc(doc(db, 'sessionBookings/shared'), { participantIds: [uid] }))
+  }
+  await assertFails(getDoc(doc(environment.authenticatedContext('outsider', verified).firestore(), 'sessionBookings/shared')))
 })
 
 test('Google sign-ins cannot access Firebase resources until a code-verified session is issued', async () => {

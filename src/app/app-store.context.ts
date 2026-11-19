@@ -15,6 +15,7 @@ export interface AppStoreValue {
   updateSwap: (id: string, status: Swap['status']) => void
   scheduleSession: (swapId: string, sessionId: string, update: Pick<SwapSession, 'scheduledAt' | 'deliveryMode' | 'meetingLink' | 'location'>) => void
   completeSession: (swapId: string, sessionId: string) => void
+  linkSessionBooking: (swapId: string, sessionId: string, bookingId: string) => void
   createLesson: (lesson: Omit<Lesson, 'id'>) => void
   openConversation: (participantId: string, context?: string) => string
   sendMessage: (conversationId: string, text: string) => void

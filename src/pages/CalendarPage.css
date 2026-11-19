@@ -92,3 +92,4 @@
   .calendar-unscheduled-list { gap: 10px; }
   .calendar-schedule-label { font-size: 0; }
 }
+.calendar-event-booking { background: #e8f0e0; color: #58744d; }

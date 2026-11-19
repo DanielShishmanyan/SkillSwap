@@ -73,6 +73,11 @@ export function SwapDetailsPage() {
     swap.requesterId === currentUser.id
       ? swap.receiverOffer
       : swap.requesterOffer;
+  const startScheduling = (session: SwapSession) => {
+    if (session.deliveryMode === 'in_person') { setSessionToSchedule(session); return; }
+    const params = new URLSearchParams({ title: session.skillName, duration: String(session.durationMinutes), email: partner?.email || '', swap: swap.id, slot: session.id });
+    nav('/session/new?' + params);
+  };
   return (
     <main className="page-shell page-enter py-7 sm:py-10">
       <Link
@@ -261,7 +266,7 @@ export function SwapDetailsPage() {
                 title={`You teach ${partner?.name?.split(" ")[0]}`}
                 skill={ownOffer.skillName}
                 sessions={ownSessions}
-                onSchedule={setSessionToSchedule}
+                onSchedule={startScheduling}
                 onComplete={(session) => {
                   completeSession(swap.id, session.id);
                   toast.success("Session marked complete");
@@ -272,7 +277,7 @@ export function SwapDetailsPage() {
                 title={`${partner?.name?.split(" ")[0]} teaches you`}
                 skill={learningOffer.skillName}
                 sessions={learningSessions}
-                onSchedule={setSessionToSchedule}
+                onSchedule={startScheduling}
                 onComplete={(session) => {
                   completeSession(swap.id, session.id);
                   toast.success("Session confirmed complete");
@@ -441,7 +446,8 @@ function SessionColumn({
                 {session.status}
               </Badge>
             </div>
-            {session.status === "unscheduled" && (
+            {session.bookingId && <Link to={'/session/' + session.bookingId} className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-brand-700"><CalendarDays size={16} />Open lesson booking</Link>}
+            {session.status === "unscheduled" && !session.bookingId && (
               <Button
                 variant="secondary"
                 className="mt-4 w-full"

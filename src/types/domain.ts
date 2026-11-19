@@ -14,7 +14,7 @@ export interface UserProfile {
 export type SwapStatus = 'pending' | 'accepted' | 'declined' | 'active' | 'completed' | 'cancelled'
 export interface SwapOffer { skillId: string; skillName: string; sessionsCount: number; minutesPerSession: 30 | 45 | 60 | 90 | 120 }
 export type SwapSessionStatus = 'unscheduled' | 'scheduled' | 'completed' | 'cancelled'
-export interface SwapSession { id: string; swapId: string; teacherId: string; learnerId: string; skillId: string; skillName: string; sessionNumber: number; scheduledAt?: string; durationMinutes: number; deliveryMode: DeliveryMode; meetingLink?: string; location?: string; status: SwapSessionStatus; completedAt?: string; createdAt: string }
+export interface SwapSession { id: string; swapId: string; teacherId: string; learnerId: string; skillId: string; skillName: string; sessionNumber: number; scheduledAt?: string; durationMinutes: number; deliveryMode: DeliveryMode; meetingLink?: string; location?: string; bookingId?: string; status: SwapSessionStatus; completedAt?: string; createdAt: string }
 export interface SwapActivity { id: string; actorId: string; type: 'proposed' | 'countered' | 'accepted' | 'scheduled' | 'session_completed' | 'completed' | 'declined'; message: string; createdAt: string }
 export interface Swap {
   id: string; requesterId: string; receiverId: string; requesterOffer: SwapOffer; receiverOffer: SwapOffer;

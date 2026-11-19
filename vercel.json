@@ -1,6 +1,8 @@
 {
   "functions": {
-    "api/auth/[action].js": { "maxDuration": 60 }
+    "api/auth/[action].js": { "maxDuration": 60 },
+    "api/sessions/[action].js": { "maxDuration": 60 },
+    "api/calendar/[action].js": { "maxDuration": 60 }
   },
   "rewrites": [
     {

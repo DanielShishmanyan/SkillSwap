@@ -24,9 +24,12 @@ export function getAuthRuntime() {
   const app = getApps().find(app => app.name === 'vercel-auth')
     || initializeApp({ credential: cert(credentials), projectId }, 'vercel-auth')
   const db = getFirestore(app)
+  const adminAuth = getAuth(app)
   runtime = {
     db,
-    handlers: createAuthHandlers({ db, adminAuth: getAuth(app), otpSecret, resendKey, firebaseWebKey, emailFrom }),
+    adminAuth,
+    encryptionSecret: otpSecret,
+    handlers: createAuthHandlers({ db, adminAuth, otpSecret, resendKey, firebaseWebKey, emailFrom }),
   }
   return runtime
 }

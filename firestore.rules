@@ -15,6 +15,15 @@ service cloud.firestore {
         && freshSession(request.auth.token.otp_verified_at);
     }
     function isSelf(id) { return signedIn() && request.auth.uid == id; }
+    match /sessionBookings/{sessionId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.participantIds;
+      allow write: if false;
+    }
+    match /calendarConnections/{id} { allow read, write: if false; }
+    match /calendarOAuthStates/{id} { allow read, write: if false; }
+    match /sessionJobs/{id} { allow read, write: if false; }
+    match /sessionEmails/{id} { allow read, write: if false; }
+    match /sessionLimits/{id} { allow read, write: if false; }
     function participant(data) { return signedIn() && request.auth.uid in data.participantIds; }
     function protectedStatsUnchanged() {
       return request.resource.data.ratingAverage == resource.data.ratingAverage

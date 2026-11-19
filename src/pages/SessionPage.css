@@ -1,0 +1,61 @@
+.session-page { max-width: 1140px; padding-top: 34px; padding-bottom: 70px; }
+.session-back { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 28px; color: #708074; font-size: 13px; font-weight: 600; }
+.session-heading { max-width: 730px; margin-bottom: 32px; }
+.session-heading h1 { margin-top: 12px; color: #294434; font-size: clamp(30px, 3.5vw, 42px); font-weight: 600; line-height: 1.2; letter-spacing: -.045em; overflow-wrap: anywhere; }
+.session-heading > p:last-child { margin-top: 14px; color: #758278; font-size: 14px; line-height: 1.8; }
+.session-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(240px, 1fr); gap: 32px; align-items: start; }
+.session-card { min-width: 0; padding: 32px; border: 1px solid #e4eadf; border-radius: 24px; background: #fff; box-shadow: 0 12px 35px #29443405; }
+.session-connection { display: flex; align-items: center; gap: 14px; }
+.session-connection > span, .session-guide-icon { display: grid; flex: none; place-items: center; width: 48px; height: 48px; border-radius: 15px; background: #eaf1e5; color: #5d7c60; }
+.session-connection h2 { font-size: 15px; font-weight: 700; color: #36553f; }
+.session-connection p { margin-top: 5px; font-size: 12px; line-height: 1.7; color: #78857a; overflow-wrap: anywhere; }
+.session-connection > div { flex: 1; }
+.session-form { display: flex; flex-direction: column; gap: 22px; }
+.session-card-divider { padding-top: 28px; margin-top: 28px; border-top: 1px solid #edf0e8; }
+.session-form .label { font-size: 12px; color: #586c5b; }
+.session-form .field { background: #fafbf7; border-color: #dfe7da; border-radius: 10px; }
+.session-form-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; }
+.session-form-row input { min-width: 0; }
+.session-form small { display: block; margin-top: 8px; font-size: 10px; color: #8a9588; }
+.session-form .session-note { height: 100px; padding-top: 12px; resize: vertical; }
+.session-primary { min-height: 46px; border-radius: 10px; align-self: flex-start; }
+.session-guide { padding: 28px; border-radius: 22px; background: #f0f3eb; color: #657760; }
+.session-guide h2 { margin-top: 22px; color: #3f583d; font-size: 22px; font-weight: 600; letter-spacing: -.025em; }
+.session-guide > p { margin-top: 12px; font-size: 13px; line-height: 1.9; }
+.session-guide > div { display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; }
+.session-guide > div svg { flex: none; margin-top: 3px; }
+.session-guide > div p { font-size: 12px; line-height: 1.8; }
+.session-notice, .session-error { margin: 18px 0; padding: 13px 15px; border-radius: 10px; background: #f2f5ed; color: #66775f; font-size: 13px; line-height: 1.8; }
+.session-error { background: #fff1ee; color: #a04e3e; }
+.session-status { display: inline-flex; padding: 6px 11px; border-radius: 7px; background: #f2eedf; color: #85753e; font-size: 11px; font-weight: 600; text-transform: capitalize; }
+.session-status-confirmed, .session-status-completed { background: #eaf2e5; color: #54734c; }
+.session-status-cancelled { background: #f1eeeb; color: #8b7770; }
+.session-date { margin-top: 22px; color: #304c38; font-size: 24px; font-weight: 600; letter-spacing: -.025em; }
+.session-time { display: flex; align-items: center; gap: 9px; margin-top: 13px; color: #596f5a; font-size: 14px; }
+.session-timezone { margin-top: 7px; padding-left: 26px; color: #8b9588; font-size: 11px; }
+.session-message { margin-top: 24px; padding: 16px; border: 1px solid #e9ecdf; border-radius: 10px; background: #fbfbf6; font-size: 13px; line-height: 1.8; color: #6e7965; white-space: pre-wrap; overflow-wrap: anywhere; }
+.session-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 25px; }
+.session-join { display: inline-flex; justify-content: center; align-items: center; gap: 10px; min-height: 45px; padding: 12px 20px; border-radius: 10px; background: #50765e; color: #fff; font-size: 14px; font-weight: 600; }
+.session-join:hover { background: #3f614a; }
+.session-calendar-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 22px; font-size: 11px; color: #75856c; }
+.session-calendar-links a { display: inline-flex; align-items: center; gap: 6px; }
+.session-copy { display: inline-flex; align-items: center; gap: 8px; margin-top: 22px; padding: 10px 12px; border: 1px solid #d7dfce; border-radius: 9px; font-size: 12px; font-weight: 600; background: #f7f9f1; }
+.session-guide .session-small { font-size: 11px; color: #8a9480; }
+.session-cancel, .session-text-button { display: block; margin-top: 23px; font-size: 12px; color: #9b6a58; }
+.session-text-button { color: #78866b; }
+.session-card h3 { font-size: 16px; font-weight: 600; }
+.session-next { display: flex; align-items: center; gap: 16px; margin: 24px 0 0; padding: 20px 24px; border: 1px solid #dbe5d3; border-radius: 16px; background: #f0f5e9; color: #4d6b48; }
+.session-next > span { display: grid; gap: 5px; flex: 1; min-width: 0; }
+.session-next small { font-size: 10px; }
+.session-next strong { font-size: 16px; font-weight: 600; }
+.session-next > span > span { font-size: 12px; }
+.session-next svg { flex: none; }
+@media(max-width: 767px) {
+  .session-page { padding-top: 24px; }
+  .session-layout { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .session-card { padding: 24px 20px; border-radius: 19px; }
+  .session-form-row { grid-template-columns: minmax(0, 1fr); }
+  .session-heading { margin-bottom: 25px; }
+  .session-guide { padding: 24px; }
+  .session-time { font-size: 13px; }
+}

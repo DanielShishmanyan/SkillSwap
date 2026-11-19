@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAppStore } from '../app/app-store.context'
 import { Button } from '../components/ui/Button'
+import { UpcomingSession } from '../components/calendar/UpcomingSession'
 import { skills } from '../features/skills/skills.data'
 import type { TeachableSkill } from '../types/domain'
 import './HomePage.css'
@@ -67,6 +68,7 @@ export function HomePage() {
         <span className="home-drift-dot home-drift-dot-two" />
       </div>
 
+      <UpcomingSession />
       <section className="home-hero page-shell" aria-labelledby="home-title">
         <div className="home-intro">
           <p className="home-eyebrow"><span /> A LITTLE CURIOSITY GOES A LONG WAY</p>

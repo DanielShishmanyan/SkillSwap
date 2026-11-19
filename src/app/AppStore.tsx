@@ -286,6 +286,11 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       });
     }
   };
+  const linkSessionBooking = (swapId: string, sessionId: string, bookingId: string) => {
+    setSwaps(all => all.map(swap => swap.id === swapId
+      ? { ...swap, sessions: swap.sessions.map(session => session.id === sessionId ? { ...session, bookingId } : session) }
+      : swap));
+  };
   const createLesson = (lesson: Omit<Lesson, "id">) =>
     setLessons((all) => [{ ...lesson, id: crypto.randomUUID() }, ...all]);
   const openConversation = (participantId: string, context = "Direct message") => {
@@ -347,6 +352,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     updateSwap,
     scheduleSession,
     completeSession,
+    linkSessionBooking,
     createLesson,
     openConversation,
     sendMessage,

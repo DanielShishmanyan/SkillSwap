@@ -6,6 +6,9 @@ import { AuthError } from '../functions/src/auth-handlers.js'
 test('the deployable Vercel entry point imports with the root production dependencies', async () => {
   const { default: handler } = await import('../api/auth/[action].js')
   assert.equal(typeof handler, 'function')
+  for (const path of ['../api/calendar/[action].js', '../api/sessions/[action].js']) {
+    assert.equal(typeof (await import(path)).default, 'function')
+  }
 })
 
 function request(overrides = {}) {

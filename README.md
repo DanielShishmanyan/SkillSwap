@@ -80,6 +80,8 @@ Local demo sign-in requires `VITE_ENABLE_DEMO_AUTH=true`, no Firebase configurat
 
 ## Development
 
+For shared lesson proposals, automatic Google Meet creation, and background reminders, see [CALENDAR_SETUP.md](CALENDAR_SETUP.md).
+
 ```bash
 npm install
 npm run dev
