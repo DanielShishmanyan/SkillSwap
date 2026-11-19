@@ -6,6 +6,7 @@ import { Link, Navigate, useLocation } from 'react-router-dom'
 import { z } from 'zod'
 import { Button } from '../components/ui/Button'
 import { EmailCodeForm } from '../components/auth/EmailCodeForm'
+import { GoogleSignInButton } from '../components/auth/GoogleSignInButton'
 import { useAuth } from '../features/auth/AuthProvider'
 import { isDemoAuthEnabled, isFirebaseConfigured } from '../firebase/firebase.config'
 import { authErrorMessage } from '../features/auth/auth-errors'
@@ -100,13 +101,12 @@ export function AuthPage({ register = false }: { register?: boolean }) {
         <div className="auth-note"><span className="auth-note-dot"/>Learn together. Grow at your own pace.</div>
       </section>
       <section className="auth-card" aria-labelledby="auth-title">
-        {challenge ? <EmailCodeForm challenge={challenge} email={challengeEmail} onChallenge={setChallenge} onCancel={() => { setChallenge(null); setServerError('') }} /> : <>
         <p className="auth-card-eyebrow">{register ? 'Make yourself at home' : 'Welcome back'}</p>
         <h1 id="auth-title" className="mt-2 text-3xl font-bold tracking-tight text-ink">{register ? 'Create your account' : 'Your next chapter awaits.'}</h1>
         <p className="mt-3 text-sm leading-6 text-muted">{register ? 'A place to share what you know and discover something new.' : 'Sign in to pick up where you left off.'}</p>
-        {isFirebaseConfigured && <><Button className="mt-6 w-full" type="button" variant="secondary" loading={googleLoading} disabled={loading || isSubmitting || googleLoading} onClick={continueWithGoogle}>Continue with Google</Button><p className="mt-3 text-center text-xs leading-5 text-muted">We’ll email you a code after Google sign-in.</p></>}
+        {isFirebaseConfigured && <div className="auth-google-section"><GoogleSignInButton loading={googleLoading} disabled={loading || isSubmitting || googleLoading} onClick={() => void continueWithGoogle()} /><p className="auth-google-note">A quick Google sign-in, then a code to your inbox.</p><div className="auth-method-divider"><span>or use your email</span></div></div>}
         {googleError && <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700" role="alert">{googleError}</div>}
-        <form className="mt-8" onSubmit={handleSubmit(submit)} noValidate>
+        <form className={isFirebaseConfigured ? 'mt-6' : 'mt-8'} onSubmit={handleSubmit(submit)} noValidate>
           {register && <Field label="Full name" error={errors.name?.message}><input className="field" autoComplete="name" placeholder="Your full name" {...field('name')} /></Field>}
           <Field label="Email address" error={errors.email?.message} className={register ? 'mt-5' : ''}><input className="field" type="email" autoComplete="email" placeholder="you@example.com" {...field('email')} /></Field>
           <Field label="Password" error={errors.password?.message} className="mt-5"><div className="relative"><input className="field pr-11" type={showPassword ? 'text' : 'password'} autoComplete={register ? 'new-password' : 'current-password'} placeholder={register ? 'At least 12 characters' : 'Your password'} maxLength={128} {...field('password')} /><button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-1 top-1 grid size-9 place-items-center rounded-md text-muted hover:bg-slate-100" aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button></div></Field>
@@ -118,8 +118,8 @@ export function AuthPage({ register = false }: { register?: boolean }) {
         </form>
         {isDemoAuthEnabled && !register && <div className="auth-demo mt-5 rounded-xl p-4 text-sm"><p className="font-bold text-brand-700">Local demo · no email verification</p><p className="mt-1 text-muted"><span className="font-semibold">mila@skillswap.dev</span> · password: <span className="font-semibold">skillswap</span></p></div>}
         <p className="mt-7 text-center text-sm text-muted">{register ? 'Already have an account?' : 'New to SkillSwap?'} <Link className="font-bold text-brand-700 hover:text-brand-600" to={register ? '/login' : '/register'}>{register ? 'Sign in' : 'Create an account'}</Link></p>
-        </>}
       </section>
+      {challenge && <EmailCodeForm key={challenge.challengeId} challenge={challenge} email={challengeEmail} onChallenge={setChallenge} onCancel={() => { setChallenge(null); setServerError(''); setGoogleError('') }} />}
     </div>
     <footer className="auth-footer">© 2026 SkillSwap <span>·</span> Made for curious minds.</footer>
   </main>
