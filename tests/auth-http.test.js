@@ -3,6 +3,11 @@ import { test } from 'node:test'
 import { createAuthHttpHandler } from '../server/auth-http.js'
 import { AuthError } from '../functions/src/auth-handlers.js'
 
+test('the deployable Vercel entry point imports with the root production dependencies', async () => {
+  const { default: handler } = await import('../api/auth/[action].js')
+  assert.equal(typeof handler, 'function')
+})
+
 function request(overrides = {}) {
   return {
     method: 'POST', query: { action: 'startEmailAuth' },
