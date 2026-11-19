@@ -4,11 +4,7 @@
   },
   "rewrites": [
     {
-      "source": "/api/auth/:action",
-      "destination": "/api/auth/:action"
-    },
-    {
-      "source": "/(.*)",
+      "source": "/((?!api(?:/|$)).*)",
       "destination": "/index.html"
     }
   ]
