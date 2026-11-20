@@ -7,8 +7,8 @@ Shared bookings are stored server-side in `sessionBookings`. The rest of the mar
 ## Google configuration
 
 1. Enable Google Calendar API in project `skillswap-ba92b`.
-2. Create an OAuth **Web application** client with redirect URI `https://skill-swap-eight-delta.vercel.app/api/calendar/callback`.
-3. Save `GOOGLE_CALENDAR_CLIENT_ID` and `GOOGLE_CALENDAR_CLIENT_SECRET` in Vercel **Production**. Store the secret as **Secret**; neither setting uses a `VITE_` prefix. Redeploy after saving.
+2. Create an OAuth **Web application** client with redirect URI `https://www.skillswap.vip/api/calendar/callback`.
+3. Set `APP_URL=https://www.skillswap.vip` in Vercel Production so callbacks and session links use the final host (the apex redirects to www). Add `www.skillswap.vip` to Firebase Authentication authorized domains for Google sign-in. Save `GOOGLE_CALENDAR_CLIENT_ID` and `GOOGLE_CALENDAR_CLIENT_SECRET` in Vercel **Production**. Store the secret as **Secret**; neither setting uses a `VITE_` prefix. Redeploy after saving.
 4. If Google Auth Platform → Audience is in Testing, add the Google accounts used for testing. Public access to sensitive Calendar scopes can require Google's verification. Testing-mode Calendar grants can expire after seven days; reconnect when prompted.
 5. Sign in to SkillSwap, open `/session/new`, and choose **Connect Google Calendar**. Use the Google account matching the SkillSwap email and grant Calendar access. Only the organizer needs this connection.
 
@@ -23,7 +23,7 @@ The existing Firebase service account and Resend settings from `AUTH_SETUP.md` a
 Set a random `SESSION_CRON_SECRET` of at least 32 characters as a Vercel Production Secret, redeploy, and configure a private external scheduler to call every five minutes:
 
 ```text
-GET https://skill-swap-eight-delta.vercel.app/api/sessions/reminders
+GET https://www.skillswap.vip/api/sessions/reminders
 Authorization: Bearer <SESSION_CRON_SECRET>
 ```
 

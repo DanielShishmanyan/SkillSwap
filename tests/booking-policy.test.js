@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { bookingId, publicBooking, reminderDue, requireVerifiedSession, secretMatches, validateSchedule } from '../server/booking-policy.js'
+import { APP_ORIGIN, bookingId, publicBooking, reminderDue, requireVerifiedSession, secretMatches, validateSchedule } from '../server/booking-policy.js'
 import { tokenCipher } from '../server/google-calendar.js'
 import { createBookingHttp } from '../server/booking-http.js'
 
@@ -41,6 +41,24 @@ test('calendar refresh credentials are encrypted and bound to their owner', () =
   assert.equal(cipher.decrypt(encrypted, 'alice'), 'private-google-refresh-token')
   assert.throws(() => cipher.decrypt(encrypted, 'bob'))
   assert.throws(() => cipher.decrypt(encrypted.slice(0, -1) + '!', 'alice'))
+})
+
+test('a current meeting stays available during email retry while stale meeting links remain hidden', () => {
+  const record = { id: 'a'.repeat(32), revision: 2, status: 'confirmed', meetingLink: 'https://meet.google.com/abc-defg-hij', syncPending: true, calendarEventId: 'ss' + 'a'.repeat(32) + 'r2' }
+  assert.equal(publicBooking(record).meetingLink, record.meetingLink)
+  for (const change of [{ calendarEventId: 'ss' + record.id + 'r1' }, { calendarEventId: null }, { status: 'pending' }, { status: 'cancelled' }]) {
+    assert.equal(publicBooking({ ...record, ...change }).meetingLink, null)
+  }
+})
+
+test('Calendar connection starts only on the callback origin so the browser can return its state cookie', async () => {
+  const host = 'other-skillswap-host.example'
+  assert.notEqual(APP_ORIGIN, 'https://' + host)
+  const handler = createBookingHttp(() => { throw Error('No OAuth state should be created on the wrong domain') }, 'calendar')
+  const response = { setHeader() {}, status(code) { this.code = code; return this }, json(value) { this.value = value } }
+  await handler({ method: 'POST', query: { action: 'connect' }, headers: { host, origin: 'https://' + host } }, response)
+  assert.equal(response.code, 409)
+  assert.ok(response.value.error.message.includes(APP_ORIGIN + '/session/new'))
 })
 
 test('a scheduler cannot run without its configured secret', async () => {

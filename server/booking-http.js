@@ -31,6 +31,9 @@ export function createBookingHttp(getRuntime, area) {
       const expected = `https://${request.headers.host}`
       const local = process.env.VERCEL !== '1' && `http://${request.headers.host}`
       if (request.headers.origin !== expected && request.headers.origin !== local) throw new AuthError('permission-denied', 'Open SkillSwap to continue.')
+      if (area === 'calendar' && action === 'connect' && request.headers.origin !== APP_ORIGIN) {
+        throw new AuthError('failed-precondition', `To connect Google Calendar, open ${APP_ORIGIN}/session/new.`)
+      }
       if (!request.headers['content-type']?.startsWith('application/json') || !request.body
           || typeof request.body !== 'object' || Array.isArray(request.body) || Buffer.byteLength(JSON.stringify(request.body)) > 8192) {
         throw new AuthError('invalid-argument', 'Invalid session request.')

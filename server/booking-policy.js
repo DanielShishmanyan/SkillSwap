@@ -1,7 +1,7 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
 import { AuthError } from '../functions/src/auth-handlers.js'
 
-export const APP_ORIGIN = process.env.APP_URL || 'https://skill-swap-eight-delta.vercel.app'
+export const APP_ORIGIN = new URL(process.env.APP_URL || 'https://www.skillswap.vip').origin
 export const sessionUrl = id => `${APP_ORIGIN}/session/${id}`
 export const bookingId = (uid, requestId) => createHash('sha256').update(`${uid}:${requestId}`).digest('hex').slice(0, 32)
 
@@ -52,5 +52,6 @@ export function secretMatches(actual, expected) {
 export function publicBooking(record) {
   const { lease, calendarEventId, calendarOwnerId, notificationRevision, reminderSentRevision, ...publicData } = record
   void lease; void calendarEventId; void calendarOwnerId; void notificationRevision; void reminderSentRevision
-  return { ...publicData, meetingLink: record.status === 'confirmed' && !record.syncPending ? record.meetingLink : null }
+  const currentMeeting = record.calendarEventId === `ss${record.id}r${record.revision}`
+  return { ...publicData, meetingLink: record.status === 'confirmed' && currentMeeting ? record.meetingLink : null }
 }
